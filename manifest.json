@@ -5268,5 +5268,55 @@
     "language": "english-version",
     "file": "jc/maths/2026/marking-scheme-higher-level.pdf",
     "bytes": 492676
+  },
+  {
+    "level": "lc",
+    "subjectId": "computer-science",
+    "subjectName": "Computer Science",
+    "year": 2021,
+    "label": "Marking Scheme - Higher Level",
+    "language": "english-version",
+    "file": "lc/computer-science/2021/marking-scheme-higher-level.pdf",
+    "bytes": 574755
+  },
+  {
+    "level": "lc",
+    "subjectId": "computer-science",
+    "subjectName": "Computer Science",
+    "year": 2022,
+    "label": "Marking Scheme - Higher Level",
+    "language": "english-version",
+    "file": "lc/computer-science/2022/marking-scheme-higher-level.pdf",
+    "bytes": 994906
+  },
+  {
+    "level": "lc",
+    "subjectId": "computer-science",
+    "subjectName": "Computer Science",
+    "year": 2023,
+    "label": "Marking Scheme - Higher Level",
+    "language": "english-version",
+    "file": "lc/computer-science/2023/marking-scheme-higher-level.pdf",
+    "bytes": 671450
+  },
+  {
+    "level": "lc",
+    "subjectId": "computer-science",
+    "subjectName": "Computer Science",
+    "year": 2024,
+    "label": "Marking Scheme - Higher Level",
+    "language": "english-version",
+    "file": "lc/computer-science/2024/marking-scheme-higher-level.pdf",
+    "bytes": 460825
+  },
+  {
+    "level": "lc",
+    "subjectId": "computer-science",
+    "subjectName": "Computer Science",
+    "year": 2025,
+    "label": "Marking Scheme - Higher Level",
+    "language": "english-version",
+    "file": "lc/computer-science/2025/marking-scheme-higher-level.pdf",
+    "bytes": 368738
   }
 ]
