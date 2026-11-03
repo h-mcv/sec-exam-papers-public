@@ -46,6 +46,14 @@ jobs:
             "https://www.studyclix.ie/$page" \
               -o "/tmp/studyclix-page-$safe.html" || true
           done
+          for query in \
+            '"Leaving Certificate 2024 Marking Scheme Mathematics Higher Level"' \
+            '"Junior Cycle 2024 Marking Scheme Mathematics Higher Level"'; do
+            safe=$(echo "$query" | tr -cd '[:alnum:]' | cut -c1-30)
+            curl --fail --retry 3 --retry-delay 1 -L \
+              "https://www.google.com/search?q=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$query")" \
+              -o "/tmp/google-$safe.html" || true
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -55,4 +63,5 @@ jobs:
             /tmp/studyclix-endpoints.txt
             /tmp/studyclix-*.json
             /tmp/studyclix-page-*.html
+            /tmp/google-*.html
             /tmp/studyclix-js
