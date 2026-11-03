@@ -36,6 +36,16 @@ jobs:
           curl --fail --retry 3 --retry-delay 1 -L \
             'https://bff.studyclix.ie/api/exampapers?subject=1' \
             -o /tmp/studyclix-exampapers-1.json || true
+          for page in \
+            leaving-certificate/english \
+            leaving-certificate/mathematics \
+            junior-cycle/english \
+            junior-cycle/mathematics; do
+            safe=$(echo "$page" | tr / -)
+            curl --fail --retry 3 --retry-delay 1 -L \
+              "https://www.studyclix.ie/papers/$page" \
+              -o "/tmp/studyclix-page-$safe.html" || true
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -44,4 +54,5 @@ jobs:
             /tmp/studyclix-papers.html
             /tmp/studyclix-endpoints.txt
             /tmp/studyclix-*.json
+            /tmp/studyclix-page-*.html
             /tmp/studyclix-js
