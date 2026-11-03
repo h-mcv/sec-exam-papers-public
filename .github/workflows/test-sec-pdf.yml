@@ -1,0 +1,15 @@
+name: Test SEC PDF access
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -eux
+          curl --fail --location --max-time 30 \
+            https://www.examinations.ie/archive/markingschemes/2025/LC025ALP000EV.pdf \
+            -o /tmp/test.pdf
+          file /tmp/test.pdf
