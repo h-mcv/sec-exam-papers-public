@@ -9,25 +9,10 @@ jobs:
     steps:
       - run: |
           set -eux
-          git clone --depth 1 https://github.com/ETM-Code/exam-papers.git /tmp/exam-papers
-          cd /tmp/exam-papers
-          go build -o /tmp/exam-papers-cli ./cmd/exam-papers
           mkdir -p /tmp/schemes
-          codes='25'
-          export GOFLAGS=-buildvcs=false
-          fetch() {
-            year="$1"; code="$2"
-            out="/tmp/schemes/lc-${code}-${year}"
-            mkdir -p "$out"
-            /tmp/exam-papers-cli fetch -y "$year" -e lc -s "$code" -t markingschemes -o "$out" || true
-          }
-          export -f fetch
-          for code in $codes; do
-            for year in 2025; do
-              printf '%s %s\n' "$year" "$code"
-            done
-          done | xargs -n2 -P32 bash -c 'fetch "$1" "$2"' _
-          find /tmp/schemes -type f -size +1k -print
+          u='https://www.examinations.ie/archive/markingschemes/2025/LC025ALP000EV.pdf'
+          curl --fail --location --max-time 60 "https://api.allorigins.win/raw?url=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))' "$u")" -o /tmp/schemes/test.pdf
+          file /tmp/schemes/test.pdf
       - uses: actions/upload-artifact@v4
         with:
           name: lc-marking-schemes
