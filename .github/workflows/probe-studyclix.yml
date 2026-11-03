@@ -43,7 +43,7 @@ jobs:
             junior-cycle/mathematics; do
             safe=$(echo "$page" | tr / -)
             curl --fail --retry 3 --retry-delay 1 -L \
-              "https://www.studyclix.ie/papers/$page" \
+            "https://www.studyclix.ie/$page" \
               -o "/tmp/studyclix-page-$safe.html" || true
           done
 
