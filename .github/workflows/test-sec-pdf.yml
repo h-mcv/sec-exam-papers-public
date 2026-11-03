@@ -22,9 +22,11 @@ jobs:
             /tmp/exam-papers-cli fetch -y "$year" -e lc -s "$code" -t markingschemes -o "$out" >/tmp/log 2>&1 || true
           }
           export -f fetch
-          printf '%s\n' "$codes" | tr ' ' '\n' | while read -r code; do
-            seq 1996 2026 | xargs -n1 -P8 -I{} bash -c 'fetch "$1" "$2"' _ {} "$code"
-          done
+          for code in $codes; do
+            for year in $(seq 1996 2026); do
+              printf '%s %s\n' "$year" "$code"
+            done
+          done | xargs -n2 -P32 bash -c 'fetch "$1" "$2"' _
           find /tmp/schemes -type f -size +1k -print
       - uses: actions/upload-artifact@v4
         with:
