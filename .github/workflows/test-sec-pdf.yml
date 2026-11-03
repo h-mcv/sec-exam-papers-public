@@ -9,7 +9,6 @@ jobs:
     steps:
       - run: |
           set -eux
-          curl --fail --location --max-time 30 \
-            https://www.examinations.ie/archive/markingschemes/2025/LC025ALP000EV.pdf \
-            -o /tmp/test.pdf
-          file /tmp/test.pdf
+          git clone --depth 1 https://github.com/ETM-Code/exam-papers.git /tmp/exam-papers
+          cd /tmp/exam-papers
+          go run ./cmd/exam-papers list papers -y 2025 -e lc -s 25 --json | head -c 1000
