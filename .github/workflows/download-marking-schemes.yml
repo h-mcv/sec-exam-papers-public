@@ -23,6 +23,20 @@ jobs:
           curl --fail --retry 3 --retry-delay 2 -L https://www.studyclix.ie/papers \
             -o /tmp/studyclix-papers.html
           wc -c /tmp/studyclix-papers.html
+          mkdir -p /tmp/studyclix-js
+          grep -oE 'src="[^"]+\.js[^"]*"' /tmp/studyclix-papers.html |
+            sed -E 's/^src="([^"]+)".*$/\1/' |
+            while read -r script; do
+              case "$script" in
+                http*) url="$script" ;;
+                /*) url="https://www.studyclix.ie$script" ;;
+                *) url="https://www.studyclix.ie/$script" ;;
+              esac
+              curl --fail --retry 3 --retry-delay 1 -L "$url" \
+                -o "/tmp/studyclix-js/$(basename "${script%%\?*}")" || true
+            done
+          grep -RohE 'https?[^"]+|/api/[A-Za-z0-9_/?=&.-]+' /tmp/studyclix-js |
+            grep -Ei 'paper|exam|mark|api' | sort -u > /tmp/studyclix-endpoints.txt || true
 
       - name: Download matching PDF schemes
         env:
@@ -166,5 +180,6 @@ jobs:
           path: |
             scheme-downloads
             /tmp/studyclix-papers.html
+            /tmp/studyclix-endpoints.txt
           if-no-files-found: error
           retention-days: 7
