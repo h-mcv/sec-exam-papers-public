@@ -26,9 +26,9 @@ jobs:
           grep -RohE 'https?[^"]+|/api/[A-Za-z0-9_/?=&.-]+' /tmp/studyclix-js |
             grep -Ei 'paper|exam|mark|api' | sort -u > /tmp/studyclix-endpoints.txt || true
           for endpoint in exams examYears mediaTypes subjects; do
-            curl --fail --retry 3 --retry-delay 1 -L \
+            curl --retry 3 --retry-delay 1 -L \
               "https://bff.studyclix.ie/api/$endpoint" \
-              -o "/tmp/studyclix-$endpoint.json"
+              -o "/tmp/studyclix-$endpoint.json" || true
           done
           curl --fail --retry 3 --retry-delay 1 -L \
             'https://bff.studyclix.ie/api/exampapers?subject=1' \
