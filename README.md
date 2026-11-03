@@ -4,7 +4,7 @@ A deduplicated mirror of official Irish State Examinations Commission (SEC)
 past exam papers, for use by the [Simple Study](https://github.com/) app's
 Past Papers feature.
 
-- 517 locally mirrored PDFs, including 488 exam papers and 29 marking
+- 527 locally mirrored PDFs, including 488 exam papers and 39 marking
   schemes. Leaving Certificate + Junior Cycle coverage includes 1996-2026
   where source material is available.
 - Only the English-version (or bilingual-version, where no English-only
@@ -16,6 +16,8 @@ Past Papers feature.
   from a public study-resource mirror where the SEC PDFs were available.
 - Junior Cycle Science papers and marking schemes from 2019 and 2022-2025
   were imported from a public study-guide repository.
+- Additional marking schemes were imported from the StudyClix public CDN for
+  subjects and years where the matching local exam paper is present.
 
 These papers are published for free by the State Examinations Commission at
 [examinations.ie](https://www.examinations.ie/) for students to study from.
