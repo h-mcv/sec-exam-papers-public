@@ -18,6 +18,12 @@ jobs:
           https://raw.githubusercontent.com/vivantaneja/Past-Examination-Finder/main/data.json
           -o /tmp/sec-data.json
 
+      - name: Probe StudyClix archive
+        run: |
+          curl --fail --retry 3 --retry-delay 2 -L https://www.studyclix.ie/papers \
+            -o /tmp/studyclix-papers.html
+          wc -c /tmp/studyclix-papers.html
+
       - name: Download matching PDF schemes
         env:
           PYTHONUNBUFFERED: "1"
@@ -157,6 +163,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: marking-scheme-pdfs
-          path: scheme-downloads
+          path: |
+            scheme-downloads
+            /tmp/studyclix-papers.html
           if-no-files-found: error
           retention-days: 7
