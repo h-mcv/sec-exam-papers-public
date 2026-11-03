@@ -16,6 +16,7 @@ jobs:
           import os
           import re
           import subprocess
+          from concurrent.futures import ThreadPoolExecutor, as_completed
           import urllib.parse
           import urllib.request
           from pathlib import Path
@@ -34,36 +35,44 @@ jobs:
 
           root = Path("/tmp/found")
           root.mkdir()
-          rows = []
-          for key in sorted(papers):
-              if key in schemes:
-                  continue
+          targets = [key for key in sorted(papers) if key not in schemes]
+
+          def search(key):
               level, sid, year = key
               exam = "Junior Cycle" if level == "jc" else "Leaving Certificate"
               subject = names[key]
               query = f'site:blob-static.studyclix.ie/cms/media "{exam} {year} Marking Scheme" "{subject}"'
               url = "https://www.bing.com/search?" + urllib.parse.urlencode({"q": query, "count": 10})
               try:
-                  data = urllib.request.urlopen(url, timeout=30).read().decode("utf-8", "ignore")
+                  request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                  data = urllib.request.urlopen(request, timeout=10).read().decode("utf-8", "ignore")
               except Exception:
-                  continue
+                  return []
               data = html.unescape(data)
               urls = sorted(set(re.findall(r"https://blob-static\.studyclix\.ie/cms/media/[A-Za-z0-9-]+\.pdf", data)))
               if not urls:
-                  continue
+                  return []
               safe = re.sub(r"[^a-z0-9]+", "-", f"{level}-{sid}-{year}".lower()).strip("-")
+              found = []
               for n, pdf_url in enumerate(urls[:3]):
                   dest = root / safe / f"{n}.pdf"
                   dest.parent.mkdir(parents=True, exist_ok=True)
                   try:
-                      subprocess.run(["curl", "--fail", "--retry", "4", "--retry-delay", "1",
+                      subprocess.run(["curl", "--fail", "--retry", "1", "--max-time", "15",
                                       "-L", pdf_url, "-o", str(dest)], check=True,
                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                   except Exception:
                       dest.unlink(missing_ok=True)
                       continue
                   if dest.read_bytes()[:5] == b"%PDF-":
-                      rows.append({"key": key, "url": pdf_url, "file": str(dest)})
+                      found.append({"key": key, "url": pdf_url, "file": str(dest)})
+              return found
+
+          rows = []
+          with ThreadPoolExecutor(max_workers=12) as pool:
+              futures = [pool.submit(search, key) for key in targets]
+              for future in as_completed(futures):
+                  rows.extend(future.result())
           (root / "results.json").write_text(json.dumps(rows, indent=2))
           print("found", len(rows), "candidate PDFs")
           PY
