@@ -1,0 +1,161 @@
+name: Download marking schemes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download published scheme catalogue
+        run: curl --fail --retry 5 --retry-delay 2 -L \
+          https://raw.githubusercontent.com/vivantaneja/Past-Examination-Finder/main/data.json \
+          -o /tmp/sec-data.json
+
+      - name: Download matching PDF schemes
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          import subprocess
+          from pathlib import Path
+
+          manifest = json.loads(Path("manifest.json").read_text())
+          catalogue = json.loads(Path("/tmp/sec-data.json").read_text())
+          output = Path("scheme-downloads")
+          output.mkdir()
+
+          subject_names = {
+              "accounting": "Accounting",
+              "agricultural-science": "Agricultural Science",
+              "ancient-greek": "Ancient Greek",
+              "applied-maths": "Applied Mathematics",
+              "art": "Art",
+              "biology": "Biology",
+              "business": "Business",
+              "chemistry": "Chemistry",
+              "classical-studies": "Classical Studies",
+              "computer-science": "Computer Science",
+              "construction-studies": "Construction Studies",
+              "dcg": "Design & Communication Graphics",
+              "economics": "Economics",
+              "engineering": "Engineering",
+              "english": "English",
+              "french": "French",
+              "geography": "Geography",
+              "german": "German",
+              "history": "History",
+              "home-economics": "Home Economics S & S",
+              "irish": "Irish",
+              "italian": "Italian",
+              "japanese": "Japanese",
+              "latin": "Latin",
+              "mandarin": "Mandarin Chinese",
+              "maths": "Mathematics",
+              "music": "Music",
+              "pe": "Physical Education",
+              "physics": "Physics",
+              "physics-chemistry": "Physics & Chemistry",
+              "politics-society": "Politics and Society",
+              "religious-education": "Religious Education",
+              "science": "Science",
+              "spanish": "Spanish",
+              "technology": "Technology",
+          }
+          jc_names = {
+              "business": "Business Studies",
+              "dcg": "Technical Graphics",
+              "home-economics": "Home Economics",
+              "materials-tech-wood": "Material Technology (Wood)",
+              "religious-education": "Religious Education",
+          }
+
+          def level_for(label):
+              lower = label.lower()
+              for level in ("higher", "ordinary", "foundation", "common"):
+                  if level in lower:
+                      return level
+              return None
+
+          def slug(value):
+              return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+          targets = []
+          seen = set()
+          for paper in manifest:
+              if "marking-scheme" in paper["file"]:
+                  continue
+              level = paper["level"]
+              subject = (
+                  jc_names.get(paper["subjectId"], paper["subjectName"])
+                  if level == "jc"
+                  else subject_names.get(paper["subjectId"], paper["subjectName"])
+              )
+              year = str(paper["year"])
+              level_name = level_for(paper["label"])
+              key = (level, subject, year, level_name)
+              if key in seen:
+                  continue
+              seen.add(key)
+              entries = catalogue.get(level, {}).get(subject, {}).get(year, [])
+              schemes = [
+                  item for item in entries
+                  if item.get("type", "").lower().startswith("marking")
+              ]
+              if level_name:
+                  matching = [
+                      item for item in schemes
+                      if level_name in item.get("details", "").lower()
+                  ]
+                  if matching:
+                      schemes = matching
+              if not schemes:
+                  print("NO CATALOGUE MATCH", key)
+                  continue
+              item = schemes[0]
+              filename = item["url"].split("/")[-1]
+              relative = (
+                  Path(level) / paper["subjectId"] / year /
+                  f"marking-scheme-{slug(item.get('details', filename))}.pdf"
+              )
+              target = output / relative
+              target.parent.mkdir(parents=True, exist_ok=True)
+              url = f"https://www.examinations.ie/archive/markingschemes/{year}/{filename}"
+              print("DOWNLOAD", url)
+              result = subprocess.run(
+                  ["curl", "--fail", "--location", "--retry", "5",
+                   "--retry-delay", "2", "--connect-timeout", "20",
+                   "--max-time", "180", "-o", str(target), url],
+                  check=False,
+              )
+              if result.returncode != 0 or not target.exists() or target.stat().st_size < 500:
+                  print("FAILED", url)
+                  target.unlink(missing_ok=True)
+                  continue
+              targets.append({
+                  "level": level,
+                  "subjectId": paper["subjectId"],
+                  "year": int(year),
+                  "label": item.get("details", ""),
+                  "source": url,
+                  "file": str(relative),
+              })
+
+          Path(output / "targets.json").write_text(json.dumps(targets, indent=2))
+          print("Downloaded", len(targets), "unique scheme PDFs")
+          PY
+
+      - name: Upload downloaded PDFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: marking-scheme-pdfs
+          path: scheme-downloads
+          if-no-files-found: error
+          retention-days: 7
