@@ -53,6 +53,9 @@ jobs:
             curl --fail --retry 3 --retry-delay 1 -L \
               "https://www.google.com/search?q=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$query")" \
               -o "/tmp/google-$safe.html" || true
+            curl --fail --retry 3 --retry-delay 1 -L \
+              "https://www.bing.com/search?q=$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))' "$query")" \
+              -o "/tmp/bing-$safe.html" || true
           done
 
       - uses: actions/upload-artifact@v4
@@ -64,4 +67,5 @@ jobs:
             /tmp/studyclix-*.json
             /tmp/studyclix-page-*.html
             /tmp/google-*.html
+            /tmp/bing-*.html
             /tmp/studyclix-js
