@@ -11,7 +11,7 @@ jobs:
           set -eux
           mkdir -p /tmp/schemes
           u='https://www.examinations.ie/archive/markingschemes/2025/LC025ALP000EV.pdf'
-          q="$(python3 -c 'import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=\"\"))' "$u")"
+          q="$(python3 -c "import urllib.parse; print(urllib.parse.quote('$u', safe=''))")"
           curl --silent --show-error --location --max-time 60 "https://corsproxy.io/?url=$q" -o /tmp/schemes/corsproxy
           curl --silent --show-error --location --max-time 60 "https://api.codetabs.com/v1/proxy?quest=$q" -o /tmp/schemes/codetabs || true
           curl --silent --show-error --location --max-time 60 "https://cors.isomorphic-git.org/$u" -o /tmp/schemes/isomorphic || true
