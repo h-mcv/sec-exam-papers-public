@@ -1,14 +1,32 @@
-name: Test SEC PDF access
+name: Download LC marking schemes
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
+  download:
     runs-on: ubuntu-latest
     steps:
       - run: |
           set -eux
           git clone --depth 1 https://github.com/ETM-Code/exam-papers.git /tmp/exam-papers
           cd /tmp/exam-papers
-          go run ./cmd/exam-papers list papers -y 2025 -e lc -s 25 --json | head -c 1000
+          go build -o /tmp/exam-papers-cli ./cmd/exam-papers
+          mkdir -p /tmp/schemes
+          codes='001 002 003 004 005 010 011 012 020 021 022 024 025 032 033 034 219'
+          export GOFLAGS=-buildvcs=false
+          fetch() {
+            year="$1"; code="$2"
+            out="/tmp/schemes/lc-${code}-${year}"
+            mkdir -p "$out"
+            /tmp/exam-papers-cli fetch -y "$year" -e lc -s "$code" -t markingschemes -o "$out" >/tmp/log 2>&1 || true
+          }
+          export -f fetch
+          printf '%s\n' "$codes" | tr ' ' '\n' | while read -r code; do
+            seq 1996 2026 | xargs -n1 -P8 -I{} bash -c 'fetch "$1" "$2"' _ {} "$code"
+          done
+          find /tmp/schemes -type f -size +1k -print
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lc-marking-schemes
+          path: /tmp/schemes
